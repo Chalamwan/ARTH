@@ -373,6 +373,7 @@
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input type="text" id="ciSearch" placeholder="ค้นหาชื่อสมาชิก...">
         </div>
+        <button class="btn btn-red" id="btnClearCheckin">🗑 ล้างเช็คชื่อทั้งหมด</button>
       </div>
       <div class="chiprow" id="ciFilterChips"></div>
       <div class="card roster-card" id="ciListCard"></div>
@@ -594,6 +595,16 @@ function toggleCheckin(id){
 
 /* ================= CHECK-IN PAGE ================= */
 document.getElementById("ciSearch").addEventListener("input", (e)=>{ ciSearch=e.target.value.trim().toLowerCase(); renderCheckin(); });
+document.getElementById("btnClearCheckin").addEventListener("click", ()=>{
+  const checkedCount = state.members.filter(m=>m.checkedIn).length;
+  if(checkedCount===0){ flashToast("ยังไม่มีใครเช็คชื่อไว้เลย"); return; }
+  if(confirm(`ล้างสถานะเช็คชื่อของสมาชิกทั้งหมด ${checkedCount} คนใช่หรือไม่? (ใช้สำหรับเริ่มวันใหม่)`)){
+    state.members.forEach(m=>{ m.checkedIn = false; });
+    saveState(true);
+    renderHome(); renderCheckin(); renderTeams();
+    flashToast("ล้างเช็คชื่อทั้งหมดแล้ว");
+  }
+});
 function renderCheckin(){
   const total = state.members.length;
   const checked = state.members.filter(m=>m.checkedIn).length;
