@@ -1,9 +1,0 @@
-{
-  "name": "andarizzth-guild-hub",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Guild check-in and team-arrangement backend on Netlify Functions + Netlify Blobs",
-  "dependencies": {
-    "@netlify/blobs": "^8.1.0"
-  }
-}
