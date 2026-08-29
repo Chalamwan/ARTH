@@ -474,26 +474,38 @@ function memberById(id){ return state.members.find(m=>m.id===id); }
 function arenaTeams(arena){ return arena==="main" ? state.mainTeams : state.subTeams; }
 function assignedIdsInArena(arena){ const set=new Set(); arenaTeams(arena).forEach(t=>t.slots.forEach(s=>{ if(s) set.add(s.memberId); })); return set; }
 
-/* ---------------- STORAGE ---------------- */
+/* ---------------- STORAGE (Netlify Function + Netlify Blobs backend) ---------------- */
+const API_URL = "/api/state";
+
 async function loadState(){
   try{
-    const res = await window.storage.get("guild-state", true);
-    if(res && res.value){
-      const p = JSON.parse(res.value);
-      state.members = (p.members||[]).map(m=>({checkedIn:false, ...m}));
-      state.mainTeams = p.mainTeams || [];
-      state.subTeams = p.subTeams || [];
+    const res = await fetch(API_URL, { method:"GET" });
+    if(res.ok){
+      const p = await res.json();
+      if(p){
+        state.members = (p.members||[]).map(m=>({checkedIn:false, ...m}));
+        state.mainTeams = p.mainTeams || [];
+        state.subTeams = p.subTeams || [];
+      }
+    } else {
+      console.error("load failed", res.status);
+      flashToast("โหลดข้อมูลไม่สำเร็จ กำลังลองใหม่...");
     }
-  }catch(e){ console.log("fresh state", e); }
+  }catch(e){ console.log("fresh state / offline", e); }
   renderAll();
 }
+
 let saveTimer=null;
 function saveState(showToast){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
     try{
-      const r = await window.storage.set("guild-state", JSON.stringify(state), true);
-      if(!r) console.error("save returned null");
+      const res = await fetch(API_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(state)
+      });
+      if(!res.ok){ throw new Error("save failed: "+res.status); }
       if(showToast) flashToast("บันทึกข้อมูลแล้ว");
     }catch(e){ console.error(e); flashToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง"); }
   }, 150);
